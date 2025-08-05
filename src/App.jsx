@@ -3,20 +3,33 @@ import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-route
 import ProductSelector from './components/ProductSelector.jsx';
 import FakeOutlook from './components/simulators/FakeOutlook.jsx';
 import FakeAWSConsole from './components/simulators/FakeAWSConsole.jsx';
+import TerminalLogPreview from './components/simulators/TerminalLogPreview.jsx';
+import LearnProduct from './components/LearnProduct.jsx';
+import { useParams } from 'react-router-dom';
+
+// Wrapper to extract product from URL and pass to LearnProduct
+function LearnProductWrapper() {
+  const { product } = useParams();
+  const architectureImg = "/image.png";
+  const confluenceLinks = [{ label: `${product} Docs`, url: `https://confluence.example.com/${product}` }];
+  const githubLinks = [{ label: `${product} Repo`, url: `https://github.com/example/${product}` }];
+  return (
+    <LearnProduct
+      product={product}
+      architectureImg={architectureImg}
+      confluenceLinks={confluenceLinks}
+      githubLinks={githubLinks}
+    />
+  );
+}
 
 function Home() {
-  const [showDialog, setShowDialog] = React.useState(false);
   const navigate = useNavigate();
 
+  // Only update selected product, do not navigate
+  const [selectedProduct, setSelectedProduct] = React.useState("");
   const handleSelect = (product) => {
-    if (product === 'Product A') {
-      setShowDialog(true);
-    }
-  };
-
-  const handleDialogOk = () => {
-    setShowDialog(false);
-    navigate('/outlook');
+    setSelectedProduct(product);
   };
 
   return (
@@ -55,24 +68,9 @@ function Home() {
         </p>
       </div>
       <div className="flex justify-center items-center w-full mt-8 mb-8">
-        <ProductSelector onSelect={handleSelect} />
+        <ProductSelector onSelect={handleSelect} selectedProduct={selectedProduct} navigate={navigate} />
       </div>
-      {showDialog && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white p-6 rounded shadow-lg">
-            <h2 className="text-lg font-semibold mb-4">Simulate Product A</h2>
-            <p>Are you sure you want to simulate Product A?</p>
-            <div className="mt-6 flex justify-end gap-2">
-              <button onClick={() => setShowDialog(false)} className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
-                Cancel
-              </button>
-              <button onClick={handleDialogOk} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                OK
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Confirmation dialog removed. */}
     </div>
   );
 }
@@ -83,7 +81,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route
-          path="/outlook"
+          path="simulators/outlook"
           element={
             <FakeOutlook
               onNext={() => window.location.replace('/kinesistoS3')}
@@ -91,7 +89,13 @@ export default function App() {
           }
         />
         <Route path="/kinesistoS3" element={<FakeAWSConsole />} />
+        <Route path="/simulators/terminallog" element={<TerminalLogPreview />} />
+        <Route
+          path="/learn/:product"
+          element={<LearnProductWrapper />}
+        />
       </Routes>
     </Router>
   );
 }
+
